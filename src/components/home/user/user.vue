@@ -9,8 +9,8 @@
     <!-- 2.搜索 -->
     <el-row class="search-row">
       <el-col>
-        <el-input placeholder="请输入内容" v-model="query" class="input-search">
-          <el-button slot="append" icon="el-icon-search"></el-button>
+        <el-input placeholder="请输入内容" v-model="query" class="input-search" clearable>
+          <el-button  @click="searchUser()" slot="append" icon="el-icon-search"></el-button>
         </el-input>
         <el-button type="success" plain>添加用户</el-button>
       </el-col>
@@ -136,13 +136,15 @@ export default {
     },
     // 分页相关方法
     handleSizeChange (val) {
-      console.log(`每页 ${val} 条`)
       this.pagesize = val
       this.getUserList()
     },
     handleCurrentChange (val) {
-      console.log(`当前页: ${val}`)
       this.pagenum = val
+      this.getUserList()
+    },
+    // 搜索用户
+    searchUser() {
       this.getUserList()
     }
   }
