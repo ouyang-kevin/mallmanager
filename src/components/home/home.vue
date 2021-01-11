@@ -20,8 +20,10 @@
     <el-container>
       <el-aside class="aside" width="200px">
         <!-- 侧边栏导航 el-menu -->
+        <!-- 开启路由模式 -->
         <el-menu
-        unique-opened = "true"
+        :router="true"
+        :unique-opened = "true"
         >
           <!-- 1 -->
           <el-submenu index="1">
@@ -30,7 +32,7 @@
               <span>用户管理</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="1-1">
+              <el-menu-item index="user">
                 <i class="el-icon-menu"></i>
                 用户列表
               </el-menu-item>
@@ -102,25 +104,28 @@
           </el-submenu>
         </el-menu>
       </el-aside>
-      <el-main class="main">Main</el-main>
+      <el-main class="main">
+      <!-- main -->
+      <router-view/>
+      </el-main>
     </el-container>
   </el-container>
 </template>
 <script>
 export default {
   // newVue之前自动触发
-  beforeCreate() {
+  beforeCreate () {
     // 获取token
     const token = localStorage.getItem('token')
 
-    if(!token) {
+    if (!token) {
       // 没有token -> 返回登录页面
       this.$router.push({name: 'login'})
     }
-    //if token 有 -> 继续渲染组件
+    // if token 有 -> 继续渲染组件
   },
   methods: {
-    handleSignout() {
+    handleSignout () {
       // 1.清除token
       localStorage.clear()
       // 2.返回登录页面
@@ -129,7 +134,7 @@ export default {
       this.$message.success('已安全退出，欢迎再次使用！')
     }
   }
-};
+}
 </script>
 <style>
 .container {
