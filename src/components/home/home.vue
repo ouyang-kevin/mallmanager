@@ -1,6 +1,7 @@
 <template>
   <el-container class="container">
     <el-header class="header">
+      <!-- 头部  -->
       <el-row>
         <el-col :span="4">
           <div class="grid-content bg-purple">
@@ -12,12 +13,13 @@
         </el-col>
         <el-col :span="2">
           <div class="grid-content bg-purple"></div>
-          <a class="loginout" href="#">退出</a>
+          <a class="loginout" @click.prevent="handleSignout()" href="#">退出</a>
         </el-col>
       </el-row>
     </el-header>
     <el-container>
       <el-aside class="aside" width="200px">
+        <!-- 侧边栏导航 el-menu -->
         <el-menu
         unique-opened = "true"
         >
@@ -116,6 +118,16 @@ export default {
       this.$router.push({name: 'login'})
     }
     //if token 有 -> 继续渲染组件
+  },
+  methods: {
+    handleSignout() {
+      // 1.清除token
+      localStorage.clear()
+      // 2.返回登录页面
+      this.$router.push({name: 'login'})
+      // 3.提示"安全退出"
+      this.$message.success('已安全退出，欢迎再次使用！')
+    }
   }
 };
 </script>
