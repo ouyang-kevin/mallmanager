@@ -22,6 +22,7 @@
         <!-- 侧边栏导航 el-menu -->
         <!-- 开启路由模式 -->
         <el-menu
+        active-text-color
         :router="true"
         :unique-opened = "true"
         >
