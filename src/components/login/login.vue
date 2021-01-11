@@ -32,25 +32,26 @@ export default {
   },
   methods: {
     // 登录请求
-    handleLogin () {
-      this.$http.post('login', this.fromdata).then((res) => {
-        console.log(res)
-        const {
+    async handleLogin () {
+      // >希望 让异步操作的代码 看起来像同步代码
+      // ES7 async + await
+      const res = await this.$http.post('login', this.fromdata)
+      console.log(res)
+      const {
           data, // eslint-disable-line
-          meta: { msg, status }
-        } = res.data
-        if (status === 200) {
+        meta: { msg, status }
+      } = res.data
+      if (status === 200) {
         // 登录成功
         // 1.跳转home
-          this.$router.push({name: 'home'})
-          // 2.提示成功
-          this.$message.success(msg)
-        } else {
-          // 不成功
-          // 1.提示消息
-          this.$message.warning(msg)
-        }
-      })
+        this.$router.push({name: 'home'})
+        // 2.提示成功
+        this.$message.success(msg)
+      } else {
+        // 不成功
+        // 1.提示消息
+        this.$message.warning(msg)
+      }
     }
   }
 }
