@@ -14,6 +14,7 @@
           v-model="query"
           class="input-search"
           clearable
+          @clear="clearmethod()"
         >
           <el-button
             @click="searchUser()"
@@ -21,7 +22,9 @@
             icon="el-icon-search"
           ></el-button>
         </el-input>
-        <el-button type="success" plain @click="showAddUserDia()">添加用户</el-button>
+        <el-button type="success" plain @click="showAddUserDia()"
+          >添加用户</el-button
+        >
       </el-col>
     </el-row>
 
@@ -68,6 +71,7 @@
               size="mini"
               plain
               type="primary"
+              @click="showEditUserDia(scope.row)"
               icon="el-icon-edit"
               circle
             ></el-button>
@@ -75,6 +79,7 @@
               size="mini"
               plain
               type="danger"
+              @click="deleteUser(scope.row.id)"
               icon="el-icon-delete"
               circle
             ></el-button>
@@ -102,6 +107,28 @@
     </el-pagination>
 
     <!-- 对话框 -->
+    <!-- 编辑用户的对话框 -->
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
+      <el-form :model="form">
+        <el-form-item label="用户名" label-width="100px">
+          <el-input
+            disabled
+            v-model="form.username"
+            autocomplete="off"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="100px">
+          <el-input v-model="form.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="100px">
+          <el-input v-model="form.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
+        <el-button type="primary" @click="editUser()">确 定</el-button>
+      </div>
+    </el-dialog>
     <!-- 添加用户的对话框 -->
     <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd">
       <el-form :model="form">
@@ -138,17 +165,18 @@ export default {
       userlist: [],
       // 添加对话框的属性
       dialogFormVisibleAdd: false,
+      dialogFormVisibleEdit: false,
       // 添加对话框的数据
       form: {
         // username  用户名称不能为空
         // password  用户密码不能为空
         // email 邮箱可以为空
         // mobile  手机号可以为空
-        username: '',
-        password: '',
-        email: '',
-        mobile: ''
-      }
+        username: "",
+        password: "",
+        email: "",
+        mobile: "",
+      },
     };
   },
   created() {
@@ -165,7 +193,6 @@ export default {
       const res = await this.$http.get(
         `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`
       );
-      console.log(res);
       const {
         data: { users, pagenum, total },
         meta: { msg, status },
@@ -190,32 +217,87 @@ export default {
       this.pagenum = val;
       this.getUserList();
     },
+    // 编辑用户
+    // 编辑用户 - 发送请求
+    async editUser() {
+      const res = await this.$http.put(`users/${this.form.id}`, this.form);
+      // 1.关闭对话框
+      this.dialogFormVisibleEdit = false;
+      if(res.data.meta.status === 200) {
+        this.$message.success(res.data.meta.msg)
+        // 2.更新视图
+        this.getUserList();
+      }
+    },
+    showEditUserDia(user) {
+      //  编辑用户 -- 显示对话框
+      this.dialogFormVisibleEdit = true;
+      this.form = user;
+    },
+    // 删除用户
+    deleteUser(userId) {
+      this.$confirm("删除用户?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          // 发送删除的请求 :id------>用户id
+          // 1.data中找userId
+          // 2.把userId以deleteUser参数形式传进来
+          const res = await this.$http.delete(`users/${userId}`);
+          console.log(res);
+          if (res.data.meta.status === 200) {
+            this.pagenum = 1;
+            // 1.更新删除之后的数据列表
+            this.getUserList();
+            // 2.提示
+            this.$message({
+              type: "success",
+              message: res.data.meta.msg,
+            });
+          }
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
+    },
     // 搜索用户
     searchUser() {
       this.getUserList();
     },
+    // 搜索用户为空，清空输入框时，触发clear
+    clearmethod() {
+      this.getUserList();
+    },
     // 添加用户--对话框显示
     showAddUserDia() {
-      this.dialogFormVisibleAdd = true
+      this.form = {}
+      this.dialogFormVisibleAdd = true;
     },
     // 添加用户--发送请求
     async addUser() {
-      const res = await this.$http.post(`users`,this.form)
-      console.log(res)
-      const {data, meta:{status,msg}} = res.data
-      if(status === 201) {
+      const res = await this.$http.post(`users`, this.form);
+      const {
+        data,
+        meta: { status, msg },
+      } = res.data;
+      if (status === 201) {
         // 1.对话框关闭
-        this.dialogFormVisibleAdd = false
+        this.dialogFormVisibleAdd = false;
         // 2.提示成功
         this.$message.success(msg);
         // 3.更新视图
-        this.getUserList()
+        this.getUserList();
         // 4.清空文本框
-        this.form = {}
+        this.form = {};
       } else {
         this.$message.warning(msg);
       }
-    }
+    },
   },
 };
 </script>
