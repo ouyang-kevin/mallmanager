@@ -88,6 +88,7 @@
               size="mini"
               plain
               type="success"
+              @click="showUserRoleDia(scope.row)"
               icon="el-icon-check"
               circle
             ></el-button>
@@ -108,6 +109,28 @@
     </el-pagination>
 
     <!-- 对话框 -->
+    <!-- 编辑用户角色的对话框 -->
+    <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+      <el-form :model="form">
+        <el-form-item label="用户名" label-width="100px">
+          {{currUsername}}
+        </el-form-item>
+        <el-form-item label="角色" label-width="100px">
+          <!-- 
+              下拉框的特性决定的：
+            如果select绑定的数据的值 和 option的value值一样，就会显示该option的label值
+           -->
+          <el-select v-model="currRoleId">
+            <el-option disabled label="请选择" :value="-1"></el-option>
+            <el-option :label="item.roleName" :value="item.id" v-for="(item, i) in rloeNameList" :key="i"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+        <el-button type="primary" @click="confirmRole()">确 定</el-button>
+      </div>
+    </el-dialog>
     <!-- 编辑用户的对话框 -->
     <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
       <el-form :model="form">
@@ -167,6 +190,7 @@ export default {
       // 添加对话框的属性
       dialogFormVisibleAdd: false,
       dialogFormVisibleEdit: false,
+      dialogFormVisibleRole: false,
       // 添加对话框的数据
       form: {
         // username  用户名称不能为空
@@ -178,6 +202,11 @@ export default {
         email: "",
         mobile: "",
       },
+      // 分配角色
+      currRoleId: 0,
+      currUserId: -1,
+      currUsername: '',
+      rloeNameList: []
     };
   },
   created() {
@@ -192,8 +221,7 @@ export default {
       this.$http.defaults.headers.common["Authorization"] = AUTH_TOKEN;
       // ajax获取数据
       const res = await this.$http.get(
-        `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`
-      );
+        `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`);
       const {
         data: { users, pagenum, total },
         meta: { msg, status },
@@ -218,23 +246,54 @@ export default {
       this.pagenum = val;
       this.getUserList();
     },
+    // 编辑用户角色
+    // 编辑用户角色 - 确定角色分配
+    async confirmRole() {
+      // 1.发送分配用户角色请求
+      const res = await this.$http.put(`users/${this.currUserId}/role`,{rid:this.currRoleId})
+        // 2.关闭对话框
+        this.dialogFormVisibleRole = false
+      if(res.data.meta.status === 200) {
+        // 3.提示用户请求成功
+        this.$message.success(res.data.meta.msg)
+      } else {
+        this.$message.warning(res.data.meta.msg)
+      }
+      // 3.更新用户数据
+    },
+    // 编辑用户角色 - 打开对话框
+    async showUserRoleDia(user) {
+      this.currUsername = user.username
+      // 给currUserId赋值
+      this.currUserId = user.id
+      // 查询当前用户角色id值 - rid
+      const res = await this.$http.get(`users/${user.id}`)
+      this.currRoleId = res.data.data.rid
+      // 获取所有的角色
+      const res1 = await this.$http.get(`roles`)
+      this.rloeNameList = res1.data.data
+      // 对话框显示
+      this.dialogFormVisibleRole = true
+    },
     // 修改状态
     async changeMgState(user) {
       // 修改状态 - 发送请求
-      const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
-      if(res.data.meta.status === 200) {
+      const res = await this.$http.put(
+        `users/${user.id}/state/${user.mg_state}`
+      );
+      if (res.data.meta.status === 200) {
         // 提示修改状态成功
-        this.$message.success(res.data.meta.msg)
+        this.$message.success(res.data.meta.msg);
       }
-    },  
+    },
     // 编辑用户
     // 编辑用户 - 发送请求
     async editUser() {
       const res = await this.$http.put(`users/${this.form.id}`, this.form);
       // 1.关闭对话框
       this.dialogFormVisibleEdit = false;
-      if(res.data.meta.status === 200) {
-        this.$message.success(res.data.meta.msg)
+      if (res.data.meta.status === 200) {
+        this.$message.success(res.data.meta.msg);
         // 2.更新视图
         this.getUserList();
       }
@@ -285,7 +344,7 @@ export default {
     },
     // 添加用户--对话框显示
     showAddUserDia() {
-      this.form = {}
+      this.form = {};
       this.dialogFormVisibleAdd = true;
     },
     // 添加用户--发送请求
