@@ -57,6 +57,7 @@
       <el-table-column label="用户状态">
         <template slot-scope="scope">
           <el-switch
+            @change="changeMgState(scope.row)"
             v-model="scope.row.mg_state"
             active-color="#13ce66"
             inactive-color="#ff4949"
@@ -217,6 +218,15 @@ export default {
       this.pagenum = val;
       this.getUserList();
     },
+    // 修改状态
+    async changeMgState(user) {
+      // 修改状态 - 发送请求
+      const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
+      if(res.data.meta.status === 200) {
+        // 提示修改状态成功
+        this.$message.success(res.data.meta.msg)
+      }
+    },  
     // 编辑用户
     // 编辑用户 - 发送请求
     async editUser() {
